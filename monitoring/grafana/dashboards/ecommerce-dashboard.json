@@ -1,0 +1,522 @@
+{{
+
+  "id": null,  "title": "E-Commerce Microservices Dashboard",
+
+  "uid": "ecommerce-main",  "tags": [
+
+  "title": "E-Commerce Microservices Dashboard",    "ecommerce",
+
+  "tags": ["ecommerce", "microservices", "kafka"],    "microservices"
+
+  "timezone": "browser",  ],
+
+  "schemaVersion": 36,  "timezone": "browser",
+
+  "version": 1,  "panels": [
+
+  "refresh": "5s",    {
+
+  "panels": [      "id": 1,
+
+    {      "title": "Total Orders Created",
+
+      "id": 1,      "targets": [
+
+      "title": "Total Orders Created",        {
+
+      "type": "stat",          "expr": "sum(orders_created_total)",
+
+      "gridPos": { "h": 6, "w": 6, "x": 0, "y": 0 },          "refId": "A"
+
+      "targets": [        }
+
+        {      ],
+
+          "expr": "sum(orders_created_total)",      "type": "stat",
+
+          "refId": "A",      "gridPos": {
+
+          "datasource": {        "h": 4,
+
+            "type": "prometheus",        "w": 6,
+
+            "uid": "PBFA97CFB590B2093"        "x": 0,
+
+          }        "y": 0
+
+        }      }
+
+      ],    },
+
+      "options": {    {
+
+        "graphMode": "area",      "id": 2,
+
+        "colorMode": "value"      "title": "Order Success Rate",
+
+      },      "targets": [
+
+      "fieldConfig": {        {
+
+        "defaults": {          "expr": "sum(orders_created_total{status='success'}) / sum(orders_created_total) * 100",
+
+          "color": {          "refId": "A"
+
+            "mode": "thresholds"        }
+
+          },      ],
+
+          "thresholds": {      "type": "gauge",
+
+            "mode": "absolute",      "gridPos": {
+
+            "steps": [        "h": 4,
+
+              { "value": null, "color": "green" },        "w": 6,
+
+              { "value": 10, "color": "yellow" },        "x": 6,
+
+              { "value": 50, "color": "red" }        "y": 0
+
+            ]      }
+
+          }    },
+
+        }    {
+
+      }      "id": 3,
+
+    },      "title": "Active Orders",
+
+    {      "targets": [
+
+      "id": 2,        {
+
+      "title": "Kafka Messages Consumed",          "expr": "active_orders",
+
+      "type": "stat",          "refId": "A"
+
+      "gridPos": { "h": 6, "w": 6, "x": 6, "y": 0 },        }
+
+      "targets": [      ],
+
+        {      "type": "stat",
+
+          "expr": "sum(kafka_messages_consumed_total)",      "gridPos": {
+
+          "refId": "A",        "h": 4,
+
+          "datasource": {        "w": 6,
+
+            "type": "prometheus",        "x": 12,
+
+            "uid": "PBFA97CFB590B2093"        "y": 0
+
+          }      }
+
+        }    },
+
+      ],    {
+
+      "options": {      "id": 4,
+
+        "graphMode": "area",      "title": "Average Order Value",
+
+        "colorMode": "value"      "targets": [
+
+      },        {
+
+      "fieldConfig": {          "expr": "avg(order_value)",
+
+        "defaults": {          "refId": "A"
+
+          "color": {        }
+
+            "mode": "thresholds"      ],
+
+          },      "type": "stat",
+
+          "thresholds": {      "gridPos": {
+
+            "mode": "absolute",        "h": 4,
+
+            "steps": [        "w": 6,
+
+              { "value": null, "color": "blue" }        "x": 18,
+
+            ]        "y": 0
+
+          }      }
+
+        }    },
+
+      }    {
+
+    },      "id": 5,
+
+    {      "title": "Order Processing Duration (p95)",
+
+      "id": 3,      "targets": [
+
+      "title": "Total Payments Processed",        {
+
+      "type": "stat",          "expr": "histogram_quantile(0.95, order_processing_duration_seconds_bucket)",
+
+      "gridPos": { "h": 6, "w": 6, "x": 12, "y": 0 },          "refId": "A"
+
+      "targets": [        }
+
+        {      ],
+
+          "expr": "sum(payments_processed_total)",      "type": "graph",
+
+          "refId": "A",      "gridPos": {
+
+          "datasource": {        "h": 6,
+
+            "type": "prometheus",        "w": 12,
+
+            "uid": "PBFA97CFB590B2093"        "x": 0,
+
+          }        "y": 4
+
+        }      }
+
+      ],    },
+
+      "options": {    {
+
+        "graphMode": "area",      "id": 6,
+
+        "colorMode": "value"      "title": "Saga Execution Duration",
+
+      },      "targets": [
+
+      "fieldConfig": {        {
+
+        "defaults": {          "expr": "histogram_quantile(0.95, saga_execution_duration_seconds_bucket)",
+
+          "color": {          "refId": "A"
+
+            "mode": "thresholds"        }
+
+          },      ],
+
+          "thresholds": {      "type": "graph",
+
+            "mode": "absolute",      "gridPos": {
+
+            "steps": [        "h": 6,
+
+              { "value": null, "color": "purple" }        "w": 12,
+
+            ]        "x": 12,
+
+          }        "y": 4
+
+        }      }
+
+      }    },
+
+    },    {
+
+    {      "id": 7,
+
+      "id": 4,      "title": "Inventory Operations",
+
+      "title": "Notifications Sent",      "targets": [
+
+      "type": "stat",        {
+
+      "gridPos": { "h": 6, "w": 6, "x": 18, "y": 0 },          "expr": "sum by (operation) (rate(inventory_operations_total[5m]))",
+
+      "targets": [          "refId": "A"
+
+        {        }
+
+          "expr": "sum(notification_processing_duration_seconds_count)",      ],
+
+          "refId": "A",      "type": "graph",
+
+          "datasource": {      "gridPos": {
+
+            "type": "prometheus",        "h": 6,
+
+            "uid": "PBFA97CFB590B2093"        "w": 12,
+
+          }        "x": 0,
+
+        }        "y": 10
+
+      ],      }
+
+      "options": {    },
+
+        "graphMode": "area",    {
+
+        "colorMode": "value"      "id": 8,
+
+      },      "title": "Payment Success Rate",
+
+      "fieldConfig": {      "targets": [
+
+        "defaults": {        {
+
+          "color": {          "expr": "sum(payments_processed_total) / (sum(payments_processed_total) + sum(payments_failed_total)) * 100",
+
+            "mode": "thresholds"          "refId": "A"
+
+          },        }
+
+          "thresholds": {      ],
+
+            "mode": "absolute",      "type": "gauge",
+
+            "steps": [      "gridPos": {
+
+              { "value": null, "color": "orange" }        "h": 6,
+
+            ]        "w": 6,
+
+          }        "x": 12,
+
+        }        "y": 10
+
+      }      }
+
+    },    },
+
+    {    {
+
+      "id": 5,      "id": 9,
+
+      "title": "Order Processing Time",      "title": "Circuit Breaker State",
+
+      "type": "timeseries",      "targets": [
+
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 6 },        {
+
+      "targets": [          "expr": "circuit_breaker_state",
+
+        {          "refId": "A"
+
+          "expr": "rate(order_processing_duration_seconds_sum[5m]) / rate(order_processing_duration_seconds_count[5m])",        }
+
+          "refId": "A",      ],
+
+          "legendFormat": "Avg Duration",      "type": "stat",
+
+          "datasource": {      "gridPos": {
+
+            "type": "prometheus",        "h": 6,
+
+            "uid": "PBFA97CFB590B2093"        "w": 6,
+
+          }        "x": 18,
+
+        }        "y": 10
+
+      ],      }
+
+      "options": {    },
+
+        "tooltip": {    {
+
+          "mode": "multi"      "id": 10,
+
+        },      "title": "Products Created/Updated",
+
+        "legend": {      "targets": [
+
+          "displayMode": "list",        {
+
+          "placement": "bottom"          "expr": "rate(products_created_total[5m])",
+
+        }          "legendFormat": "Created",
+
+      },          "refId": "A"
+
+      "fieldConfig": {        },
+
+        "defaults": {        {
+
+          "unit": "s",          "expr": "rate(products_updated_total[5m])",
+
+          "color": {          "legendFormat": "Updated",
+
+            "mode": "palette-classic"          "refId": "B"
+
+          }        }
+
+        }      ],
+
+      }      "type": "graph",
+
+    },      "gridPos": {
+
+    {        "h": 6,
+
+      "id": 6,        "w": 12,
+
+      "title": "Service Health Status",        "x": 0,
+
+      "type": "timeseries",        "y": 16
+
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 6 },      }
+
+      "targets": [    },
+
+        {    {
+
+          "expr": "up{job=~\".*-service\"}",      "id": 11,
+
+          "refId": "A",      "title": "Search Query Duration (p95)",
+
+          "legendFormat": "{{job}}",      "targets": [
+
+          "datasource": {        {
+
+            "type": "prometheus",          "expr": "histogram_quantile(0.95, search_duration_seconds_bucket)",
+
+            "uid": "PBFA97CFB590B2093"          "refId": "A"
+
+          }        }
+
+        }      ],
+
+      ],      "type": "graph",
+
+      "options": {      "gridPos": {
+
+        "tooltip": {        "h": 6,
+
+          "mode": "multi"        "w": 12,
+
+        },        "x": 12,
+
+        "legend": {        "y": 16
+
+          "displayMode": "list",      }
+
+          "placement": "bottom"    },
+
+        }    {
+
+      },      "id": 12,
+
+      "fieldConfig": {      "title": "Cache Hit/Miss Ratio",
+
+        "defaults": {      "targets": [
+
+          "color": {        {
+
+            "mode": "palette-classic"          "expr": "sum(cache_hits_total) / (sum(cache_hits_total) + sum(cache_misses_total)) * 100",
+
+          }          "refId": "A"
+
+        }        }
+
+      }      ],
+
+    },      "type": "gauge",
+
+    {      "gridPos": {
+
+      "id": 7,        "h": 6,
+
+      "title": "Kafka Messages by Topic",        "w": 6,
+
+      "type": "timeseries",        "x": 0,
+
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 14 },        "y": 22
+
+      "targets": [      }
+
+        {    },
+
+          "expr": "kafka_messages_consumed_total",    {
+
+          "refId": "A",      "id": 13,
+
+          "legendFormat": "{{topic}}",      "title": "Notifications Sent",
+
+          "datasource": {      "targets": [
+
+            "type": "prometheus",        {
+
+            "uid": "PBFA97CFB590B2093"          "expr": "sum by (type) (rate(notifications_sent_total[5m]))",
+
+          }          "refId": "A"
+
+        }        }
+
+      ],      ],
+
+      "options": {      "type": "graph",
+
+        "tooltip": {      "gridPos": {
+
+          "mode": "multi"        "h": 6,
+
+        },        "w": 12,
+
+        "legend": {        "x": 6,
+
+          "displayMode": "list",        "y": 22
+
+          "placement": "bottom"      }
+
+        }    },
+
+      },    {
+
+      "fieldConfig": {      "id": 14,
+
+        "defaults": {      "title": "Kafka Messages Consumed",
+
+          "color": {      "targets": [
+
+            "mode": "palette-classic"        {
+
+          }          "expr": "sum by (topic) (rate(kafka_messages_consumed_total[5m]))",
+
+        }          "refId": "A"
+
+      }        }
+
+    }      ],
+
+  ]      "type": "graph",
+
+}      "gridPos": {
+
+        "h": 6,
+        "w": 6,
+        "x": 18,
+        "y": 22
+      }
+    },
+    {
+      "id": 15,
+      "title": "Service Health Status",
+      "targets": [
+        {
+          "expr": "up{job=~'order-service|inventory-service|catalog-service|payment-service|notification-service'}",
+          "refId": "A"
+        }
+      ],
+      "type": "stat",
+      "gridPos": {
+        "h": 4,
+        "w": 24,
+        "x": 0,
+        "y": 28
+      }
+    }
+  ],
+  "refresh": "10s",
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  }
+}

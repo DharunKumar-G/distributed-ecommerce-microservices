@@ -1,0 +1,317 @@
+services:
+  # Message Queue - Apache Kafka
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.0
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
+    networks:
+      - ecommerce-network
+
+  kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+      - "9093:9093"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:9093
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
+    networks:
+      - ecommerce-network
+
+  # Databases
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: ecommerce
+      POSTGRES_PASSWORD: ecommerce123
+      POSTGRES_DB: orders_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./init-db:/docker-entrypoint-initdb.d
+    networks:
+      - ecommerce-network
+
+  mongodb:
+    image: mongo:7.0
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ecommerce
+      MONGO_INITDB_ROOT_PASSWORD: ecommerce123
+      MONGO_INITDB_DATABASE: catalog_db
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb-data:/data/db
+    networks:
+      - ecommerce-network
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    command: redis-server --appendonly yes
+    networks:
+      - ecommerce-network
+
+  # Search Engine
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.0
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ports:
+      - "9200:9200"
+    volumes:
+      - elasticsearch-data:/usr/share/elasticsearch/data
+    networks:
+      - ecommerce-network
+
+  # API Gateway
+  kong:
+    image: kong:3.4
+    environment:
+      KONG_DATABASE: "off"
+      KONG_DECLARATIVE_CONFIG: /kong/declarative/kong.yml
+      KONG_PROXY_ACCESS_LOG: /dev/stdout
+      KONG_ADMIN_ACCESS_LOG: /dev/stdout
+      KONG_PROXY_ERROR_LOG: /dev/stderr
+      KONG_ADMIN_ERROR_LOG: /dev/stderr
+      KONG_ADMIN_LISTEN: 0.0.0.0:8001
+    ports:
+      - "8000:8000"  # Proxy
+      - "8001:8001"  # Admin API
+      - "8443:8443"  # Proxy SSL
+      - "8444:8444"  # Admin API SSL
+    volumes:
+      - ./kong:/kong/declarative
+    networks:
+      - ecommerce-network
+
+  # Monitoring Stack
+  prometheus:
+    image: prom/prometheus:v2.47.0
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+    networks:
+      - ecommerce-network
+
+  grafana:
+    image: grafana/grafana:10.1.0
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin123
+      GF_INSTALL_PLUGINS: grafana-piechart-panel
+    volumes:
+      - ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards
+      - ./monitoring/grafana/datasources:/etc/grafana/provisioning/datasources
+      - grafana-data:/var/lib/grafana
+    depends_on:
+      - prometheus
+    networks:
+      - ecommerce-network
+
+  # Distributed Tracing
+  jaeger:
+    image: jaegertracing/all-in-one:1.50
+    environment:
+      COLLECTOR_ZIPKIN_HOST_PORT: :9411
+      COLLECTOR_OTLP_ENABLED: true
+    ports:
+      - "5775:5775/udp"
+      - "6831:6831/udp"
+      - "6832:6832/udp"
+      - "5778:5778"
+      - "16686:16686"  # UI
+      - "14268:14268"
+      - "14250:14250"
+      - "9411:9411"
+    networks:
+      - ecommerce-network
+
+  # Microservices
+  order-service:
+    build:
+      context: ./services/order-service
+      dockerfile: Dockerfile
+    ports:
+      - "8081:8081"
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: ecommerce
+      DB_PASSWORD: ecommerce123
+      DB_NAME: orders_db
+      KAFKA_BROKERS: kafka:9092
+      REDIS_HOST: redis:6379
+      JAEGER_AGENT_HOST: jaeger
+      JAEGER_AGENT_PORT: 6831
+    depends_on:
+      - postgres
+      - kafka
+      - redis
+      - jaeger
+    networks:
+      - ecommerce-network
+
+  inventory-service:
+    build:
+      context: ./services/inventory-service
+      dockerfile: Dockerfile
+    ports:
+      - "8082:8082"
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: ecommerce
+      DB_PASSWORD: ecommerce123
+      DB_NAME: orders_db
+      KAFKA_BROKERS: kafka:9092
+      REDIS_HOST: redis:6379
+      JAEGER_AGENT_HOST: jaeger
+      JAEGER_AGENT_PORT: 6831
+    depends_on:
+      - postgres
+      - kafka
+      - redis
+      - jaeger
+    networks:
+      - ecommerce-network
+
+  catalog-service:
+    build:
+      context: ./services/catalog-service
+      dockerfile: Dockerfile
+    ports:
+      - "8083:8083"
+    environment:
+      MONGO_URI: mongodb://ecommerce:ecommerce123@mongodb:27017/catalog_db?authSource=admin
+      ELASTICSEARCH_URL: http://elasticsearch:9200
+      KAFKA_BROKERS: kafka:9092
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      JAEGER_AGENT_HOST: jaeger
+      JAEGER_AGENT_PORT: 6831
+    depends_on:
+      - mongodb
+      - elasticsearch
+      - kafka
+      - redis
+      - jaeger
+    networks:
+      - ecommerce-network
+
+  payment-service:
+    build:
+      context: ./services/payment-service
+      dockerfile: Dockerfile
+    ports:
+      - "8084:8084"
+    environment:
+      KAFKA_BROKERS: kafka:9092
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      JAEGER_AGENT_HOST: jaeger
+      JAEGER_AGENT_PORT: 6831
+      DATABASE_URL: postgres://ecommerce:ecommerce123@postgres:5432/orders_db
+      PAYPAL_CLIENT_ID: AZDO9OYUhRsv65hIX7S4PNq3TBOkmUxhUsLQw31tsic3xVEEFEjjufGR3AmzDYeMzTjqUmyuu-V-1-c5
+      PAYPAL_CLIENT_SECRET: EB9HLSC-wrlJtWUPIKJzBR1RT0oWHg8iiUAhUpNEkmgl0on0m3TSjLPe_R-ALZiJX9tgdyk-viPUHBjh
+      PAYPAL_SANDBOX: true
+    depends_on:
+      - postgres
+      - kafka
+      - redis
+      - jaeger
+    networks:
+      - ecommerce-network
+
+  notification-service:
+    build:
+      context: ./services/notification-service
+      dockerfile: Dockerfile
+    ports:
+      - "8085:8085"
+    environment:
+      KAFKA_BROKERS: kafka:9092
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      JAEGER_AGENT_HOST: jaeger
+      JAEGER_AGENT_PORT: 6831
+    depends_on:
+      - kafka
+      - redis
+      - jaeger
+    networks:
+      - ecommerce-network
+
+  user-service:
+    build:
+      context: ./services/user-service
+      dockerfile: Dockerfile
+    ports:
+      - "8086:8086"
+    environment:
+      PORT: 8086
+      DATABASE_HOST: postgres
+      DATABASE_PORT: 5432
+      DATABASE_NAME: ecommerce
+      DATABASE_USER: ecommerce
+      DATABASE_PASSWORD: ecommerce123
+      JWT_SECRET: your-super-secret-jwt-key-change-in-production-123456
+    depends_on:
+      - postgres
+    networks:
+      - ecommerce-network
+
+  web3-service:
+    build:
+      context: ./services/web3-service
+      dockerfile: Dockerfile
+    ports:
+      - "8087:8087"
+    environment:
+      PORT: 8087
+      MONGO_URI: mongodb://ecommerce:ecommerce123@mongodb:27017/web3_db?authSource=admin
+      POLYGON_MUMBAI_RPC: https://rpc-mumbai.maticvigil.com
+      POLYGON_RPC: https://polygon-rpc.com
+      ETH_RPC: https://eth.llamarpc.com
+      BASE_RPC: https://mainnet.base.org
+      LOG_LEVEL: info
+      NODE_ENV: production
+    depends_on:
+      - mongodb
+    networks:
+      - ecommerce-network
+
+networks:
+  ecommerce-network:
+    driver: bridge
+
+volumes:
+  postgres-data:
+  mongodb-data:
+  redis-data:
+  elasticsearch-data:
+  prometheus-data:
+  grafana-data:

@@ -1,0 +1,88 @@
+_format_version: "3.0"
+
+services:
+  - name: order-service
+    url: http://order-service:8081
+    routes:
+      - name: order-routes
+        paths:
+          - /api/orders
+        strip_path: false
+    plugins:
+      - name: rate-limiting
+        config:
+          minute: 100
+          policy: local
+      - name: prometheus
+      - name: correlation-id
+
+  - name: inventory-service
+    url: http://inventory-service:8082
+    routes:
+      - name: inventory-routes
+        paths:
+          - /api/inventory
+        strip_path: false
+    plugins:
+      - name: rate-limiting
+        config:
+          minute: 100
+          policy: local
+      - name: prometheus
+      - name: correlation-id
+
+  - name: catalog-service
+    url: http://catalog-service:8083
+    routes:
+      - name: catalog-routes
+        paths:
+          - /api/catalog
+        strip_path: false
+    plugins:
+      - name: rate-limiting
+        config:
+          minute: 200
+          policy: local
+      - name: prometheus
+      - name: correlation-id
+      - name: response-transformer
+        config:
+          add:
+            headers:
+              - X-Cache-Status:$upstream_cache_status
+
+  - name: payment-service
+    url: http://payment-service:8084
+    routes:
+      - name: payment-routes
+        paths:
+          - /api/payments
+        strip_path: false
+    plugins:
+      - name: rate-limiting
+        config:
+          minute: 50
+          policy: local
+      - name: prometheus
+      - name: correlation-id
+
+plugins:
+  - name: cors
+    config:
+      origins:
+        - "*"
+      methods:
+        - GET
+        - POST
+        - PUT
+        - DELETE
+        - PATCH
+        - OPTIONS
+      headers:
+        - Accept
+        - Authorization
+        - Content-Type
+      exposed_headers:
+        - X-Auth-Token
+      credentials: true
+      max_age: 3600
