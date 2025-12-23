@@ -1,0 +1,146 @@
+services:
+  # Order Service (Go)
+  - type: web
+    name: order-service
+    env: docker
+    dockerfilePath: ./services/order-service/Dockerfile
+    dockerContext: ./services/order-service
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: PORT
+        value: 8081
+      - key: DATABASE_URL
+        sync: false
+      - key: KAFKA_BROKERS
+        sync: false
+      - key: KAFKA_SASL_USERNAME
+        sync: false
+      - key: KAFKA_SASL_PASSWORD
+        sync: false
+      - key: REDIS_URL
+        sync: false
+      - key: JAEGER_AGENT_HOST
+        value: ""
+
+  # Inventory Service (Go)
+  - type: web
+    name: inventory-service
+    env: docker
+    dockerfilePath: ./services/inventory-service/Dockerfile
+    dockerContext: ./services/inventory-service
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: PORT
+        value: 8082
+      - key: DATABASE_URL
+        sync: false
+      - key: KAFKA_BROKERS
+        sync: false
+      - key: KAFKA_SASL_USERNAME
+        sync: false
+      - key: KAFKA_SASL_PASSWORD
+        sync: false
+      - key: REDIS_URL
+        sync: false
+
+  # Catalog Service (Node.js)
+  - type: web
+    name: catalog-service
+    env: docker
+    dockerfilePath: ./services/catalog-service/Dockerfile
+    dockerContext: ./services/catalog-service
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: PORT
+        value: 8083
+      - key: MONGODB_URI
+        sync: false
+      - key: ELASTICSEARCH_URL
+        sync: false
+      - key: REDIS_URL
+        sync: false
+      - key: KAFKA_BROKERS
+        sync: false
+
+  # Payment Service (Rust)
+  - type: web
+    name: payment-service
+    env: docker
+    dockerfilePath: ./services/payment-service/Dockerfile
+    dockerContext: ./services/payment-service
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: PORT
+        value: 8084
+      - key: REDIS_URL
+        sync: false
+      - key: KAFKA_BROKERS
+        sync: false
+      - key: STRIPE_SECRET_KEY
+        sync: false
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false
+
+  # Notification Service (Python)
+  - type: web
+    name: notification-service
+    env: docker
+    dockerfilePath: ./services/notification-service/Dockerfile
+    dockerContext: ./services/notification-service
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: PORT
+        value: 8085
+      - key: KAFKA_BROKERS
+        sync: false
+      - key: REDIS_URL
+        sync: false
+
+  # User Service (Node.js)
+  - type: web
+    name: user-service
+    env: docker
+    dockerfilePath: ./services/user-service/Dockerfile
+    dockerContext: ./services/user-service
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: PORT
+        value: 8086
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+
+  # Web3 Service (Node.js)
+  - type: web
+    name: web3-service
+    env: docker
+    dockerfilePath: ./services/web3-service/Dockerfile
+    dockerContext: ./services/web3-service
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: PORT
+        value: 8087
+
+  # Frontend UI
+  - type: web
+    name: ecommerce-ui
+    env: static
+    buildCommand: cd ui && npm install && npm run build
+    staticPublishPath: ui/dist
+    plan: free
+    headers:
+      - path: /*
+        name: X-Frame-Options
+        value: DENY
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html

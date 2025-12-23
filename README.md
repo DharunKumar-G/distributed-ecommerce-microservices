@@ -154,6 +154,14 @@ This project demonstrates a complete microservices ecosystem with:
 - 8GB RAM minimum
 - 20GB disk space
 
+## 🆓 Deploy for FREE
+
+Want to deploy this without any cost? See **[DEPLOY_FREE.md](DEPLOY_FREE.md)** for:
+- 100% free tier deployment using Railway/Render
+- Free managed databases (MongoDB Atlas, Supabase, Upstash)
+- One-click deploy options
+- ~30 minutes to a fully deployed platform!
+
 ## 🚀 Quick Start
 
 ### 1. Clone & Setup
