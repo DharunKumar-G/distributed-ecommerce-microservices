@@ -1,6 +1,15 @@
 # Distributed E-Commerce Microservices Platform
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Docker](https://img.shields.io/badge/Docker-Ready-blue?logo=docker)](https://www.docker.com/)
+[![Microservices](https://img.shields.io/badge/Microservices-7-green)]()
+[![Languages](https://img.shields.io/badge/Languages-4-orange)]()
+[![Kafka](https://img.shields.io/badge/Kafka-Event%20Driven-black?logo=apachekafka)](https://kafka.apache.org/)
+[![Deploy](https://img.shields.io/badge/Deploy-Free-brightgreen)](DEPLOY_FREE.md)
+
 A production-grade, distributed e-commerce backend system built with microservices architecture, event-driven patterns, and comprehensive observability.
+
+> **⭐ Star this repo if you find it helpful!**
 
 ## 🏗️ Architecture Overview
 
